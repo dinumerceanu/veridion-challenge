@@ -1,18 +1,16 @@
 import pandas as pd
 import requests
 import os
-from bs4 import BeautifulSoup
-
-downloaded_logos = 0
+from concurrent.futures import ThreadPoolExecutor
 
 def download_logo(domain):
-    logo_url = f"https://img.logo.dev/{domains[i]}?token=pk_LeeVQnGLT3uD5zai-rFzVQ"
+    logo_url = f"https://img.logo.dev/{domain}?token=pk_LeeVQnGLT3uD5zai-rFzVQ"
     global downloaded_logos
     folder = "logos"
     os.makedirs(folder, exist_ok=True)
     
     try:
-        logo_response = requests.get(logo_url, timeout=2)
+        logo_response = requests.get(logo_url, timeout=3)
         logo_response.raise_for_status()
 
         content_type = logo_response.headers.get('Content-Type', '')
@@ -24,7 +22,7 @@ def download_logo(domain):
             ext = 'jpg'
         else:
             print("unknown extension")
-            return
+            return 0
 
         file_name = f"{domain}.{ext}"
         file_path = os.path.join(folder, file_name)
@@ -33,10 +31,11 @@ def download_logo(domain):
             f.write(logo_response.content)
             
         print(f"SAVED: Logo saved as {file_path}")
-        downloaded_logos += 1
+        return 1
 
     except requests.exceptions.RequestException as e:
         print(f"ERROR: URL: {logo_url}: {e}")
+        return 0
 
 file_path = r"D:\veridion\veridion-challenge\logos.snappy.parquet"
 
@@ -44,9 +43,12 @@ df = pd.read_parquet(file_path)
 
 url_column = "domain"
 domains = df[url_column].tolist()
-timeout = 2
 
-for i in range(100):
-    download_logo(domains[i])
+MAX_WORKERS = 30
+results = []
+domains_to_process = domains
 
-print(f"{downloaded_logos}/100")
+with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    results = executor.map(download_logo, domains_to_process)
+
+print(f"{sum(results)}/{len(domains_to_process)}")

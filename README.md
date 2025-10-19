@@ -86,3 +86,39 @@ Relying solely on a third-party API introduces a single point of failure (API ou
             <link rel="icon"> or <link rel="apple-touch-icon">
 
             <img> tags with class="logo" or id="brand".
+
+5. Thinking Process: From Concept to Solution
+
+When I initially approached this challenge, the overall complexity felt daunting and I struggled to define a clear endpoint. My strategy quickly shifted to an iterative, step-by-step approach: even without knowing the final destination, I focused on identifying the immediate next step.
+
+5.1. Resource Understanding and Initial Strategy
+
+The first action was a thorough investigation of the available resources. I analyzed the contents of the .parquet file to understand its data structure, confirming it was populated with numerous domain URLs.
+
+This clarity immediately defined the primary goal: Resource Gathering. The next step was clearly to find the corresponding company logos for each domain.
+
+My initial idea was to perform a GET request to each domain’s homepage and parse the returned HTML. I quickly identified several complexities with this scraping approach:
+
+    Non-Standardization: Logos could be located in various HTML elements (meta tags, <link>, <img> tags with unique classes).
+
+    Ambiguity: Multiple images on a single page could be easily confused with the official logo.
+
+    Normalization Overhead: Successful extraction would require subsequent steps to standardize resolution, format (e.g. converting SVG to PNG/JPG) and filename, which felt overly tedious.
+
+5.2. Adoption of External APIs (Efficiency Pivot)
+
+Recognizing the overhead of building a robust scraping and normalization service, I pivoted to searching for specialized third-party solutions. I discovered two professional logo APIs: Logo.clearbit and Logo.dev. Given that Clearbit's service was scheduled for discontinuation, Logo.dev became the preferred choice, allowing for highly efficient and standardized logo retrieval.
+
+5.3. Optimizing Resource Gathering (Concurrency)
+
+With the resource gathering logic defined, the immediate next problem became performance. A sequential download approach, waiting for each server response individually, would take an unacceptable amount of time.
+
+    Decision: I recognized that the download stage was I/O-bound (network limited). To overcome this bottleneck, I implemented multithreading using Python's ThreadPoolExecutor. This strategy allowed the program to manage multiple download requests concurrently, significantly improving performance and reducing the total execution time.
+
+5.4. Feature Engineering for Similarity (Clustering)
+
+With the complete set of logos efficiently gathered, I moved to the second major stage: clustering. The goal was to group logos based on visual resemblance, which required a simplified, robust image representation.
+
+    Feature Choice: I discovered Perceptual Hashing (pHash) and the Hamming Distance as the ideal solution. After reviewing explanatory videos, I understood that pHash could convert complex visual data into a compact binary string that captures the image's structural fingerprint, making the comparison resilient to noise and minor compression changes.
+
+    Implementation: I proceeded with the implementation using specialized Python tools (imagehash, scikit-learn, NumPy) to calculate the full distance matrix and apply Agglomerative Clustering, defining a clear, data-driven threshold for visual similarity.

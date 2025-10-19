@@ -37,7 +37,7 @@ def download_logo(domain):
         print(f"ERROR: URL: {logo_url}: {e}")
         return 0
 
-file_path = r"D:\veridion\veridion-challenge\logos.snappy.parquet"
+file_path = "logos.snappy.parquet"
 
 df = pd.read_parquet(file_path)
 

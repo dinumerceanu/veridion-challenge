@@ -1,11 +1,9 @@
-import pandas as pd
 import requests
 import os
 from concurrent.futures import ThreadPoolExecutor
 
 def download_logo(domain):
     logo_url = f"https://img.logo.dev/{domain}?token=pk_LeeVQnGLT3uD5zai-rFzVQ"
-    global downloaded_logos
     folder = "logos"
     os.makedirs(folder, exist_ok=True)
     
@@ -37,18 +35,11 @@ def download_logo(domain):
         print(f"ERROR: URL: {logo_url}: {e}")
         return 0
 
-file_path = "logos.snappy.parquet"
+def download_logos(domains_to_process):
+    MAX_WORKERS = 30
+    results = []
 
-df = pd.read_parquet(file_path)
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        results = executor.map(download_logo, domains_to_process)
 
-url_column = "domain"
-domains = df[url_column].tolist()
-
-MAX_WORKERS = 30
-results = []
-domains_to_process = domains
-
-with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-    results = executor.map(download_logo, domains_to_process)
-
-print(f"{sum(results)}/{len(domains_to_process)}")
+    print(f"{sum(results)}/{len(domains_to_process)}")
